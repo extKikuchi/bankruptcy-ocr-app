@@ -1,0 +1,10 @@
+streamlit
+PyMuPDF
+Pillow
+pandas
+azure-ai-formrecognizer
+google-cloud-vision
+openai
+python-dotenv
+sqlalchemy
+psycopg2-binary
