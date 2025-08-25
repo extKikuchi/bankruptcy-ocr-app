@@ -1,0 +1,11 @@
+.env
+*.pyc
+__pycache__/
+database/
+temp/
+outputs/
+claude-out/
+.streamlit/secrets.toml
+venv/
+*.pdf
+*.db
