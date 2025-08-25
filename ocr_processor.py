@@ -1,5 +1,5 @@
-# OCR処理モジュール
-import fitz  # PyMuPDF
+# OCR処理モジュール（pdf2image版）
+from pdf2image import convert_from_bytes
 from PIL import Image
 import io
 from azure.ai.formrecognizer import DocumentAnalysisClient
@@ -10,25 +10,23 @@ import os
 import json
 
 def pdf_to_images(pdf_path):
-    """PDFを画像に変換"""
-    doc = fitz.open(pdf_path)
-    images = []
+    """PDFを画像に変換（pdf2image版）"""
+    # PDFファイルを読み込み
+    with open(pdf_path, 'rb') as f:
+        pdf_data = f.read()
     
-    for page_num in range(len(doc)):
-        page = doc[page_num]
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 解像度を上げる
-        img_data = pix.tobytes()
-        img = Image.open(io.BytesIO(img_data))
-        
-        # PILイメージをバイトに変換
+    # PDFを画像に変換
+    images = convert_from_bytes(pdf_data, dpi=200)
+    
+    # バイト形式に変換
+    image_bytes = []
+    for img in images:
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='PNG')
         img_byte_arr = img_byte_arr.getvalue()
-        
-        images.append(img_byte_arr)
+        image_bytes.append(img_byte_arr)
     
-    doc.close()
-    return images
+    return image_bytes
 
 def perform_azure_ocr(pdf_data):
     """Azure Form Recognizerを実行"""
@@ -128,5 +126,4 @@ def extract_text_with_coordinates(pdf_data, use_azure=True):
         return text_elements
     else:
         # Google OCRの場合の実装
-        # 今回はAzure OCRをメインで使用
-        pass
+        return []

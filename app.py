@@ -1,15 +1,19 @@
-# 自己破産書類OCR処理アプリケーション（統合版）
+# 自己破産書類OCR処理アプリケーション（統合版・PyMuPDFなし）
 import streamlit as st
 import os
 import json
 from datetime import datetime
-import fitz
 from PIL import Image
 import io
 import openai
+from pdf2image import convert_from_bytes
+
+# 環境変数をロード（ローカル開発用）
+from dotenv import load_dotenv
+load_dotenv()
 
 # 環境判定とインポート
-IS_PRODUCTION = os.getenv('STREAMLIT_RUNTIME_ENV') == 'cloud' or 'DATABASE_URL' in st.secrets
+IS_PRODUCTION = os.getenv('STREAMLIT_RUNTIME_ENV') == 'cloud' or 'DATABASE_URL' in st.secrets if hasattr(st, 'secrets') else False
 
 if IS_PRODUCTION:
     # 本番環境用の設定とインポート
@@ -20,7 +24,7 @@ else:
     from config import *
     from database_models import *
 
-from ocr_processor import *
+from ocr_processor_pdf2image import *
 from llm_regex_generator import *
 
 # Streamlit Secretsから環境変数を読み込み（本番環境）
@@ -116,7 +120,7 @@ with st.sidebar:
     use_azure = st.checkbox("Azure OCRを使用", value=True)
     save_to_db = st.checkbox("パターンをDBに保存", value=True)
 
-# メインエリア（以下、main_app.pyと同じ内容）
+# メインエリア
 if uploaded_file:
     # 一時ファイルとして保存
     temp_dir = "temp"
@@ -168,13 +172,11 @@ if uploaded_file:
             # PDFプレビュー
             st.subheader("PDFプレビュー")
             try:
-                doc = fitz.open(temp_pdf_path)
-                page = doc[0]
-                pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5))
-                img_data = pix.tobytes()
-                img = Image.open(io.BytesIO(img_data))
-                st.image(img, caption="1ページ目", use_column_width=True)
-                doc.close()
+                # pdf2imageでプレビュー生成
+                pdf_bytes = uploaded_file.getbuffer()
+                pages = convert_from_bytes(pdf_bytes, dpi=100, first_page=1, last_page=1)
+                if pages:
+                    st.image(pages[0], caption="1ページ目", use_column_width=True)
             except Exception as e:
                 st.error(f"PDFプレビューエラー: {str(e)}")
         
@@ -297,37 +299,6 @@ if uploaded_file:
             with col3:
                 if selected_category != "自動判別":
                     st.metric("書類カテゴリ", selected_category)
-            
-            # バウンディングボックスでの可視化
-            if st.session_state.text_elements and st.checkbox("📍 抽出位置を可視化"):
-                st.subheader("抽出位置の可視化")
-                
-                try:
-                    # PDFに抽出位置を描画
-                    doc = fitz.open(temp_pdf_path)
-                    page = doc[0]
-                    
-                    # 抽出された値の位置を特定してハイライト
-                    for value in st.session_state.extracted_values:
-                        # テキスト要素から該当箇所を探す
-                        for element in st.session_state.text_elements:
-                            if value['raw'] in element['text']:
-                                rect = fitz.Rect(
-                                    element['x'],
-                                    element['y'],
-                                    element['x'] + element['width'],
-                                    element['y'] + element['height']
-                                )
-                                page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 0), overlay=True, fill_opacity=0.3)
-                    
-                    # 画像として表示
-                    pix = page.get_pixmap(matrix=fitz.Matrix(1, 1))
-                    img_data = pix.tobytes()
-                    img = Image.open(io.BytesIO(img_data))
-                    st.image(img, caption="抽出位置（黄色でハイライト）", use_column_width=True)
-                    doc.close()
-                except Exception as e:
-                    st.error(f"可視化エラー: {str(e)}")
             
             # 保存オプション
             st.markdown("---")
