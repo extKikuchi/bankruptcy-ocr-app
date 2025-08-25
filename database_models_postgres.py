@@ -6,7 +6,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 import json
 import os
-from config import DATABASE_URL
 
 Base = declarative_base()
 
@@ -50,7 +49,10 @@ class ExtractionHistory(Base):
 def init_database():
     """データベースとテーブルを初期化"""
     # 環境変数からデータベースURLを取得
-    database_url = os.getenv('DATABASE_URL', DATABASE_URL)
+    database_url = os.getenv('DATABASE_URL')
+    
+    if not database_url:
+        raise ValueError("DATABASE_URL environment variable is not set")
     
     # Heroku等のpostgres://をpostgresql://に変換
     if database_url.startswith('postgres://'):

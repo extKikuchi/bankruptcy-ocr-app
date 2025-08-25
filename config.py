@@ -1,10 +1,16 @@
-# 設定ファイル
+# 設定ファイル（クラウド対応版）
 import os
 from pathlib import Path
 
-# ベースディレクトリ
-BASE_DIR = Path("G:/AI自己破産/cloude-ocr-output/claude-out")
-OUTPUT_DIR = BASE_DIR
+# ベースディレクトリ（環境に応じて自動調整）
+if os.getenv('STREAMLIT_RUNTIME_ENV') == 'cloud':
+    # Streamlit Cloud環境
+    BASE_DIR = Path.cwd()
+else:
+    # ローカル環境
+    BASE_DIR = Path("G:/AI自己破産/cloude-ocr-output/claude-out")
+
+OUTPUT_DIR = BASE_DIR / "outputs"
 DATABASE_DIR = BASE_DIR / "database"
 TEMP_DIR = BASE_DIR / "temp"
 
