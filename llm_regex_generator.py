@@ -2,10 +2,10 @@
 import openai
 import re
 import json
-from config import OPENAI_API_KEY
+import os
 
-# OpenAI APIキーを設定
-openai.api_key = OPENAI_API_KEY
+# OpenAI APIキーを環境変数から取得
+openai.api_key = os.getenv("OPENAI_API_KEY", "")
 
 def generate_regex_patterns(ocr_text, target_values=None, document_category=None):
     """LLMを使用して金額抽出用の正規表現を生成"""

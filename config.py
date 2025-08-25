@@ -14,10 +14,19 @@ OUTPUT_DIR = BASE_DIR / "outputs"
 DATABASE_DIR = BASE_DIR / "database"
 TEMP_DIR = BASE_DIR / "temp"
 
-# ディレクトリを作成
-OUTPUT_DIR.mkdir(exist_ok=True)
-DATABASE_DIR.mkdir(exist_ok=True)
-TEMP_DIR.mkdir(exist_ok=True)
+# ディレクトリを作成（エラーを無視）
+try:
+    OUTPUT_DIR.mkdir(exist_ok=True)
+except Exception:
+    pass
+try:
+    DATABASE_DIR.mkdir(exist_ok=True)
+except Exception:
+    pass
+try:
+    TEMP_DIR.mkdir(exist_ok=True)
+except Exception:
+    pass
 
 # データベースパス
 DATABASE_PATH = DATABASE_DIR / "ocr_patterns.db"
