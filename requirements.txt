@@ -1,5 +1,5 @@
 streamlit
-PyMuPDF
+pymupdf==1.23.8
 Pillow
 pandas
 azure-ai-formrecognizer
